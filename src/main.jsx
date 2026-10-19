@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
@@ -23,6 +23,15 @@ function Icon({ name, size = 20 }) {
 }
 
 function App() {
+  const [page, setPage] = useState(() => window.location.hash === '#/cards' ? 'Cards' : 'Dashboard');
+  const isCards = page === 'Cards';
+
+  useEffect(() => {
+    const onHashChange = () => setPage(window.location.hash === '#/cards' ? 'Cards' : 'Dashboard');
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
   const mainLinks = ['Dashboard', 'Balance', 'Cards', 'Transactions', 'Recipients'];
   const otherLinks = ['Integrations', 'Settings', 'Get Help'];
   const names = ['home', 'balance', 'cards', 'transactions', 'recipients', 'integrations', 'settings', 'help'];
@@ -33,9 +42,12 @@ function App() {
       <nav aria-label="Main navigation">
         {[mainLinks, otherLinks].map((links, group) => <div className="nav-group" key={group}>
           <p className="nav-label">{group === 0 ? 'MAIN' : 'OTHER'}</p>
-          {links.map((label, i) => <div key={label} className={`nav-item ${label === 'Dashboard' ? 'active' : ''}`} aria-current={label === 'Dashboard' ? 'page' : undefined}>
-            <Icon name={names[group === 0 ? i : i + 5]} /><span>{label}</span>
-          </div>)}
+          {links.map((label, i) => {
+            const content = <><Icon name={names[group === 0 ? i : i + 5]} /><span>{label}</span></>;
+            return label === 'Dashboard' || label === 'Cards'
+              ? <a key={label} href={label === 'Cards' ? '#/cards' : '#/'} className={`nav-item ${label === page ? 'active' : ''}`} aria-current={label === page ? 'page' : undefined}>{content}</a>
+              : <div key={label} className="nav-item">{content}</div>;
+          })}
         </div>)}
       </nav>
       <div className="sidebar-bottom">
@@ -49,18 +61,18 @@ function App() {
     </aside>
     <main>
       <header className="dashboard-header">
-        <div><h1>Your Financial Dashboard</h1><p>Welcome back, Max Verstappen!</p></div>
+        <div><h1>{isCards ? 'Cards' : 'Your Financial Dashboard'}</h1><p>Welcome back, Max Verstappen!</p></div>
         <div className="header-actions">
           <button type="button" className="icon-button" aria-label="Search"><Icon name="search" /></button>
           <button type="button" className="icon-button" aria-label="Notifications"><Icon name="bell" /></button>
           <button type="button" className="exchange-button">Exchange Rate</button>
         </div>
       </header>
-      <section className="balance-card" aria-labelledby="balance-title">
-        <div className="card-heading"><h2 id="balance-title"><Icon name="balance" size={16} />My Balance</h2><button type="button" className="more-button">More Option <span aria-hidden="true">⚙</span></button></div>
-        <div className="currency">US Dolar <span role="img" aria-label="United States">🇺🇸</span></div>
+      <section className={`balance-card${isCards ? ' wallet-card' : ''}`} aria-labelledby="balance-title">
+        <div className="card-heading"><h2 id="balance-title"><Icon name="balance" size={16} />{isCards ? 'My Wallet' : 'My Balance'}</h2><button type="button" className="more-button">More Option <span aria-hidden="true">⚙</span></button></div>
+        <div className="currency">{isCards ? 'US Currency' : 'US Dolar'} <span role="img" aria-label="United States">🇺🇸</span></div>
         <p className="amount">$63,48,100</p>
-        <p className="growth"><span aria-hidden="true">↗</span> 15.43% Than last month</p>
+        <p className="growth"><span aria-hidden="true">↗</span> 15.43% {isCards ? 'than' : 'Than'} last month</p>
         <div className="balance-actions"><button type="button"><Icon name="send" size={14} />Send</button><button type="button"><Icon name="request" size={14} />Request</button></div>
       </section>
     </main>
